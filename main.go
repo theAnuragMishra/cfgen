@@ -40,10 +40,10 @@ func main() {
 						Required: true,
 					},
 					&cli.StringFlag{
-						Name:     "user",
-						Aliases:  []string{"u"},
-						Usage:    "Author handle to include in boilerplate",
-						Required: true,
+						Name:    "user",
+						Aliases: []string{"u"},
+						Usage:   "Author handle to include in boilerplate",
+						Value:   "theanuragmishra",
 					},
 					&cli.IntFlag{
 						Name:    "workers",

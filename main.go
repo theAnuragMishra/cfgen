@@ -260,10 +260,6 @@ void solve() {}
 int main() {
   ios::sync_with_stdio(false);
   cin.tie(0);
-#ifndef ONLINE_JUDGE
-  freopen("inputf.in", "r", stdin);
-  freopen("outputf.out", "w", stdout);
-#endif
   int t = 1;
   cin >> t;
   while (t--) {

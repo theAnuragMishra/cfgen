@@ -7,8 +7,7 @@ This is a codeforces contest scraper that creates a directory for a contest with
 ### Via script
 
 The command below installs and sets up the binary automatically. You can read `install.sh` to verify what the script does.
-`curl -sSfL https://raw.githubusercontent.com/theAnuragMishra/cfgen/main/install.sh | sh
-`
+`curl -sSfL https://raw.githubusercontent.com/theAnuragMishra/cfgen/main/install.sh | sh`
 
 ### Manual
 
@@ -17,7 +16,7 @@ Make it executable: `chmod +x {binary_name}`.
 
 ## Usage
 
-Go to the directory where you want all your contests to be and run `cfgen{contest_id}`. Replace `${contest_id}` with the actual contest id which is usually the four digit number in the contest url.
+Go to the directory where you want all your contests to be and run `cfgen {contest_id}`. Replace `${contest_id}` with the actual contest id which is usually the four digit number in the contest url.
 
 Boom! You are ready to write the solutions!
 

@@ -262,7 +262,10 @@ int main() {
 }
 
 func fetchHTML(url string) (*goquery.Document, error) {
-	client := &http.Client{}
+	client := &http.Client{CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		//fmt.Println("Redirect detected to:", req.URL)
+		return http.ErrUseLastResponse
+	}}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -275,6 +278,7 @@ func fetchHTML(url string) (*goquery.Document, error) {
 		"Chrome/115.0.0.0 Safari/537.36")
 
 	resp, err := client.Do(req)
+	//fmt.Println(resp.StatusCode)
 	if err != nil {
 		return nil, err
 	}

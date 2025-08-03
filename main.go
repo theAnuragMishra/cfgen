@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -28,38 +27,31 @@ func main() {
 	app := &cli.Command{
 		Name:  "cfgen",
 		Usage: "Fetch Codeforces problems and generate boilerplate",
-		Commands: []*cli.Command{
-			{
-				Name:  "fetch",
-				Usage: "Download problems from a Codeforces contest",
-				Flags: []cli.Flag{
-					&cli.IntFlag{
-						Name:     "id",
-						Aliases:  []string{"c"},
-						Usage:    "Codeforces contest ID",
-						Required: true,
-					},
-					&cli.StringFlag{
-						Name:    "user",
-						Aliases: []string{"u"},
-						Usage:   "Author handle to include in boilerplate",
-						Value:   "theanuragmishra",
-					},
-					&cli.IntFlag{
-						Name:    "workers",
-						Aliases: []string{"w"},
-						Usage:   "Number of concurrent workers",
-						Value:   5,
-					},
-				},
-				Action: func(ctx context.Context, c *cli.Command) error {
-					contestID := strconv.Itoa(c.Int("id"))
-					username := c.String("user")
-					workers := c.Int("workers")
-
-					return fetchContest(contestID, username, workers)
-				},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "user",
+				Aliases: []string{"u"},
+				Usage:   "Author handle to include in boilerplate",
+				Value:   "",
 			},
+			&cli.IntFlag{
+				Name:    "workers",
+				Aliases: []string{"w"},
+				Usage:   "Number of concurrent workers",
+				Value:   5,
+			},
+			&cli.BoolWithInverseFlag{
+				Name:    "save-ps",
+				Usage:   "Whether to create a problem statement file",
+				Aliases: []string{"sps"},
+			},
+		},
+		Action: func(ctx context.Context, c *cli.Command) error {
+			contestID := c.Args().Get(0)
+			username := c.String("user")
+			workers := c.Int("workers")
+			ps := c.Bool("save-ps")
+			return fetchContest(contestID, username, workers, ps)
 		},
 	}
 
@@ -68,7 +60,7 @@ func main() {
 	}
 }
 
-func fetchContest(contestID, user string, maxWorkers int) error {
+func fetchContest(contestID, user string, maxWorkers int, savePS bool) error {
 	problemCodes, contestName, err := fetchProblemCodes(contestID)
 	if err != nil {
 		return err
@@ -92,7 +84,7 @@ func fetchContest(contestID, user string, maxWorkers int) error {
 				log.Printf("⚠️ Error fetching problem %s: %v\n", code, err)
 				return
 			}
-			err = saveProblem(contestName, prob, user)
+			err = saveProblem(contestName, prob, user, savePS)
 			if err != nil {
 				log.Printf("⚠️ Error saving problem %s: %v\n", code, err)
 			} else {
@@ -155,7 +147,7 @@ func getProblemDetails(contestID, problemCode string) (Problem, error) {
 	}, nil
 }
 
-func saveProblem(contestName string, problem Problem, author string) error {
+func saveProblem(contestName string, problem Problem, author string, savePS bool) error {
 	path := fmt.Sprintf("%s/%s", contestName, problem.Code)
 	os.MkdirAll(path, os.ModePerm)
 
@@ -166,10 +158,11 @@ func saveProblem(contestName string, problem Problem, author string) error {
 		}
 	}
 
-	statement := fmt.Sprintf("Problem Statement :-\n\n%s\n\n\nInput Specification :-\n\n%s\n\n\nOutput Specification :-\n\n%s\n\n\nInput Example :-\n\n%s\n\n\nOutput Example :-\n\n%s",
-		problem.Statement, problem.InputSpec, problem.OutputSpec, problem.InputEx, strings.Join(problem.OutputEx, "\n"))
-
-	write("problemStatement.txt", statement)
+	if savePS {
+		statement := fmt.Sprintf("Problem Statement :-\n\n%s\n\n\nInput Specification :-\n\n%s\n\n\nOutput Specification :-\n\n%s\n\n\nInput Example :-\n\n%s\n\n\nOutput Example :-\n\n%s",
+			problem.Statement, problem.InputSpec, problem.OutputSpec, problem.InputEx, strings.Join(problem.OutputEx, "\n"))
+		write("problemStatement.txt", statement)
+	}
 	write("inputf.in", problem.InputEx)
 	write("expectedf.out", strings.Join(problem.OutputEx, "\n"))
 	write("outputf.out", "")

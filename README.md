@@ -9,10 +9,12 @@ This is a codeforces contest scraper that creates a directory for a contest with
 The command below installs and sets up the binary automatically. You can read `install.sh` to verify what the script does.
 `curl -sSfL https://raw.githubusercontent.com/theAnuragMishra/cfgen/main/install.sh | sh`
 
+Note: For windows, use a unix-like shell environment such as Git Bash.
+
 ### Manual
 
 Download the binary corresponding to your os from the releases and rename it to whatever you like.
-Make it executable: `chmod +x {binary_name}`.
+On unix systems, make it executable: `chmod +x {binary_name}`.
 
 ## Usage
 

@@ -27,3 +27,10 @@ go.work.sum
 .idea
 
 .DS_Store
+
+# binaries
+cfgen-darwin-amd64
+cfgen-darwin-arm64
+cfgen.exe
+cfgen-linux-arm64
+cfgen-linux-amd64

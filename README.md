@@ -2,6 +2,9 @@
 
 This is a codeforces contest scraper that creates a directory for a contest with subdirectories for the problems in the contest.
 
+> [!WARNING]
+> Codeforces have started to deny requests not made directly from browsers. This makes `cfgen` fail trying to get contest info. I'll look for a fix if possible.
+
 ## Installation
 
 ### Via script

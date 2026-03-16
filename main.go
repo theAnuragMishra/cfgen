@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -262,29 +263,54 @@ int main() {
 }
 
 func fetchHTML(url string) (*goquery.Document, error) {
-	client := &http.Client{CheckRedirect: func(req *http.Request, via []*http.Request) error {
-		//fmt.Println("Redirect detected to:", req.URL)
-		return http.ErrUseLastResponse
-	}}
+	client := &http.Client{Timeout: 15 * time.Second}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Spoof a browser
+	// Spoof a browser and add common headers
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "+
 		"AppleWebKit/537.36 (KHTML, like Gecko) "+
 		"Chrome/115.0.0.0 Safari/537.36")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
 
-	resp, err := client.Do(req)
-	//fmt.Println(resp.StatusCode)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
+	var resp *http.Response
+	// Retry loop for transient failures (rate limits, 5xx, etc.)
+	for attempt := 0; attempt < 3; attempt++ {
+		resp, err = client.Do(req)
+		if err != nil {
+			if attempt < 2 {
+				time.Sleep(time.Duration(300*(1<<attempt)) * time.Millisecond)
+				continue
+			}
+			return nil, err
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			break
+		}
+
+		// Potentially transient statuses — retry
+		if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode == http.StatusForbidden || (resp.StatusCode >= 500 && resp.StatusCode < 600) {
+			resp.Body.Close()
+			if attempt < 2 {
+				time.Sleep(time.Duration(300*(1<<attempt)) * time.Millisecond)
+				continue
+			}
+			return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, url)
+		}
+
+		// Non-retryable non-200 status: include a short body snippet for debugging
+		bodyBytes, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
 		resp.Body.Close()
-		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, url)
+		return nil, fmt.Errorf("HTTP %d: %s (%s)", resp.StatusCode, url, strings.TrimSpace(string(bodyBytes)))
+	}
+
+	if resp == nil {
+		return nil, fmt.Errorf("no response received from %s", url)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)

@@ -34,3 +34,4 @@ cfgen-darwin-arm64
 cfgen-windows-amd64.exe
 cfgen-linux-arm64
 cfgen-linux-amd64
+cfgen

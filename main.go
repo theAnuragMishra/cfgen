@@ -167,8 +167,17 @@ func saveProblem(contestName string, problem Problem, author string, savePS bool
 	write("inputf.in", problem.InputEx)
 	write("expectedf.out", strings.Join(problem.OutputEx, "\n"))
 	write("outputf.out", "")
-	write("solution.cpp", generateBoilerplate(author))
+	write("solution.cpp", templateOrDefault(author))
 	return nil
+}
+
+// templateOrDefault returns contents of ./template.cpp if present and non-empty,
+// otherwise falls back to the built-in boilerplate generator.
+func templateOrDefault(name string) string {
+	if b, err := os.ReadFile("template.cpp"); err == nil && len(b) > 0 {
+		return string(b)
+	}
+	return generateBoilerplate(name)
 }
 
 func fetchHTML(url string) (*goquery.Document, error) {
